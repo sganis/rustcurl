@@ -150,9 +150,10 @@ fn apply_options(easy: &mut Easy, config: &RequestConfig) -> Result<(), RequestE
     if config.compressed {
         easy.accept_encoding("")?;
     }
-    if let Some(ref ua) = config.user_agent {
-        easy.useragent(ua)?;
-    }
+    let user_agent = config.user_agent.as_deref().unwrap_or(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
+    );
+    easy.useragent(user_agent)?;
     if let Some(n) = config.max_redirs {
         easy.max_redirections(n)?;
     }

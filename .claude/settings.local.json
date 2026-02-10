@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd /c \"\"C:Program FilesMicrosoft Visual Studio2022CommunityVCAuxiliaryBuildvcvars64.bat\" -arch=x64 -host_arch=x64 && cargo build\")",
+      "Bash(cargo build:*)",
+      "Bash(cargo run:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo test:*)",
+      "Bash(bun run:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
