@@ -30,10 +30,15 @@ pub fn print_usage() {
     eprintln!("  --bearer <TOKEN>         Bearer token authentication");
     eprintln!("  -x, --proxy <URL>        Proxy URL");
     eprintln!("  --proxy-user <USER:PASS> Proxy credentials");
+    eprintln!("  --proxy-negotiate        Enable Kerberos/SPNEGO proxy authentication");
+    eprintln!("  --proxy-ntlm             Enable NTLM proxy authentication");
+    eprintln!("  --proxy-insecure         Skip SSL verification for proxy connection");
+    eprintln!("  --proxy-cacert <PATH>    CA certificate for proxy SSL verification");
     eprintln!("  --noproxy <HOSTS>        Comma-separated list of hosts to bypass proxy");
     eprintln!("  --connect-timeout <SECS> Connection timeout in seconds");
     eprintln!("  --max-time <SECS>        Maximum total time in seconds");
     eprintln!("  --max-redirs <N>         Maximum number of redirects");
+    eprintln!("  --ssl-no-revoke          Disable certificate revocation checks");
     eprintln!("  --compressed             Request compressed response");
     eprintln!("  --timing                 Show timing information");
     eprintln!("  --resolve <H:P:A>        Resolve host:port to address (repeatable)");
@@ -114,6 +119,11 @@ pub fn parse_args(args: &[String]) -> Result<RequestConfig, String> {
     let mut silent = false;
     let mut max_redirs = None;
     let mut resolve: Vec<String> = Vec::new();
+    let mut proxy_negotiate = false;
+    let mut proxy_ntlm = false;
+    let mut proxy_insecure = false;
+    let mut proxy_cacert = None;
+    let mut ssl_no_revoke = false;
 
     let mut i = 0;
     while i < args.len() {
@@ -179,6 +189,14 @@ pub fn parse_args(args: &[String]) -> Result<RequestConfig, String> {
                 proxy_user = Some(u);
                 proxy_password = p;
             }
+            "--proxy-negotiate" => proxy_negotiate = true,
+            "--proxy-ntlm" => proxy_ntlm = true,
+            "--ssl-no-revoke" => ssl_no_revoke = true,
+            "--proxy-insecure" => proxy_insecure = true,
+            "--proxy-cacert" => {
+                let val = next_arg(args, &mut i, "--proxy-cacert")?;
+                proxy_cacert = Some(val.to_string());
+            }
             "--noproxy" => {
                 let val = next_arg(args, &mut i, "--noproxy")?;
                 noproxy = Some(val.to_string());
@@ -233,7 +251,11 @@ pub fn parse_args(args: &[String]) -> Result<RequestConfig, String> {
         .ntlm(ntlm)
         .compressed(compressed)
         .show_timing(show_timing)
-        .silent(silent);
+        .silent(silent)
+        .proxy_negotiate(proxy_negotiate)
+        .proxy_ntlm(proxy_ntlm)
+        .proxy_insecure(proxy_insecure)
+        .ssl_no_revoke(ssl_no_revoke);
 
     config.headers = headers;
     config.resolve = resolve;
@@ -285,6 +307,9 @@ pub fn parse_args(args: &[String]) -> Result<RequestConfig, String> {
     }
     if let Some(mr) = max_redirs {
         config = config.max_redirs(mr);
+    }
+    if let Some(pc) = proxy_cacert {
+        config = config.proxy_cacert(&pc);
     }
 
     Ok(config)
@@ -608,5 +633,35 @@ mod tests {
         assert!(cfg.compressed);
         assert!(cfg.show_timing);
         assert_eq!(cfg.resolve, vec!["h:443:1.2.3.4"]);
+    }
+
+    #[test]
+    fn proxy_negotiate_flag() {
+        let cfg = parse_args(&args(&["--proxy-negotiate", "-x", "http://proxy:8080", "https://x.com"])).unwrap();
+        assert!(cfg.proxy_negotiate);
+    }
+
+    #[test]
+    fn proxy_ntlm_flag() {
+        let cfg = parse_args(&args(&["--proxy-ntlm", "-x", "http://proxy:8080", "https://x.com"])).unwrap();
+        assert!(cfg.proxy_ntlm);
+    }
+
+    #[test]
+    fn proxy_insecure_flag() {
+        let cfg = parse_args(&args(&["--proxy-insecure", "-x", "http://proxy:8080", "https://x.com"])).unwrap();
+        assert!(cfg.proxy_insecure);
+    }
+
+    #[test]
+    fn proxy_cacert_flag() {
+        let cfg = parse_args(&args(&["--proxy-cacert", "/corp-ca.pem", "https://x.com"])).unwrap();
+        assert_eq!(cfg.proxy_cacert.as_deref(), Some("/corp-ca.pem"));
+    }
+
+    #[test]
+    fn ssl_no_revoke_flag() {
+        let cfg = parse_args(&args(&["--ssl-no-revoke", "https://x.com"])).unwrap();
+        assert!(cfg.ssl_no_revoke);
     }
 }

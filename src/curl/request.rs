@@ -1,6 +1,6 @@
 // src/curl/request.rs
 
-use curl::easy::{Auth, Easy, List};
+use curl::easy::{Auth, Easy, List, SslOpt};
 use std::env;
 use std::fs;
 use std::time::Duration;
@@ -112,11 +112,28 @@ fn apply_options(easy: &mut Easy, config: &RequestConfig) -> Result<(), RequestE
     if let Some(ref noproxy_hosts) = resolve_noproxy(config) {
         easy.noproxy(noproxy_hosts)?;
     }
+    if config.proxy_negotiate {
+        let mut auth = Auth::new();
+        auth.gssnegotiate(true);
+        easy.proxy_auth(&auth)?;
+        easy.proxy_username(&config.proxy_user.as_deref().unwrap_or(":"))?;
+    } else if config.proxy_ntlm {
+        let mut auth = Auth::new();
+        auth.ntlm(true);
+        easy.proxy_auth(&auth)?;
+    }
     if let Some(ref pu) = config.proxy_user {
         easy.proxy_username(pu)?;
     }
     if let Some(ref pp) = config.proxy_password {
         easy.proxy_password(pp)?;
+    }
+    if config.proxy_insecure {
+        easy.proxy_ssl_verify_peer(false)?;
+        easy.proxy_ssl_verify_host(false)?;
+    }
+    if let Some(ref path) = config.proxy_cacert {
+        easy.proxy_cainfo(path)?;
     }
     if let Some(d) = config.connect_timeout {
         easy.connect_timeout(d)?;
@@ -138,6 +155,12 @@ fn apply_options(easy: &mut Easy, config: &RequestConfig) -> Result<(), RequestE
     }
     if let Some(n) = config.max_redirs {
         easy.max_redirections(n)?;
+    }
+    if config.ssl_no_revoke {
+        let mut ssl_opts = SslOpt::new();
+        ssl_opts.no_revoke(true);
+        easy.ssl_options(&ssl_opts)?;
+        easy.proxy_ssl_options(&ssl_opts)?;
     }
     if config.verbose {
         easy.verbose(true)?;

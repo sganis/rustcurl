@@ -65,6 +65,11 @@ pub struct RequestConfig {
     pub silent: bool,
     pub max_redirs: Option<u32>,
     pub resolve: Vec<String>,
+    pub proxy_negotiate: bool,
+    pub proxy_ntlm: bool,
+    pub proxy_insecure: bool,
+    pub proxy_cacert: Option<String>,
+    pub ssl_no_revoke: bool,
 }
 
 impl RequestConfig {
@@ -98,6 +103,11 @@ impl RequestConfig {
             silent: false,
             max_redirs: None,
             resolve: Vec::new(),
+            proxy_negotiate: false,
+            proxy_ntlm: false,
+            proxy_insecure: false,
+            proxy_cacert: None,
+            ssl_no_revoke: false,
         }
     }
 
@@ -235,6 +245,31 @@ impl RequestConfig {
         self.resolve.push(entry.to_string());
         self
     }
+
+    pub fn proxy_negotiate(mut self, enable: bool) -> Self {
+        self.proxy_negotiate = enable;
+        self
+    }
+
+    pub fn proxy_ntlm(mut self, enable: bool) -> Self {
+        self.proxy_ntlm = enable;
+        self
+    }
+
+    pub fn proxy_insecure(mut self, enable: bool) -> Self {
+        self.proxy_insecure = enable;
+        self
+    }
+
+    pub fn proxy_cacert(mut self, path: &str) -> Self {
+        self.proxy_cacert = Some(path.to_string());
+        self
+    }
+
+    pub fn ssl_no_revoke(mut self, enable: bool) -> Self {
+        self.ssl_no_revoke = enable;
+        self
+    }
 }
 
 #[cfg(test)]
@@ -272,6 +307,11 @@ mod tests {
         assert!(!cfg.silent);
         assert!(cfg.max_redirs.is_none());
         assert!(cfg.resolve.is_empty());
+        assert!(!cfg.proxy_negotiate);
+        assert!(!cfg.proxy_ntlm);
+        assert!(!cfg.proxy_insecure);
+        assert!(cfg.proxy_cacert.is_none());
+        assert!(!cfg.ssl_no_revoke);
     }
 
     #[test]
@@ -303,7 +343,12 @@ mod tests {
             .user_agent("rustcurl/0.1")
             .silent(true)
             .max_redirs(5)
-            .add_resolve("example.com:443:1.2.3.4");
+            .add_resolve("example.com:443:1.2.3.4")
+            .proxy_negotiate(true)
+            .proxy_ntlm(true)
+            .proxy_insecure(true)
+            .proxy_cacert("/proxy-ca.pem")
+            .ssl_no_revoke(true);
 
         assert_eq!(cfg.method, Method::Post);
         assert!(cfg.negotiate);
@@ -332,6 +377,11 @@ mod tests {
         assert!(cfg.silent);
         assert_eq!(cfg.max_redirs, Some(5));
         assert_eq!(cfg.resolve, vec!["example.com:443:1.2.3.4"]);
+        assert!(cfg.proxy_negotiate);
+        assert!(cfg.proxy_ntlm);
+        assert!(cfg.proxy_insecure);
+        assert_eq!(cfg.proxy_cacert.as_deref(), Some("/proxy-ca.pem"));
+        assert!(cfg.ssl_no_revoke);
     }
 
     #[test]

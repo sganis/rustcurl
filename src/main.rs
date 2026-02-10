@@ -49,6 +49,9 @@ fn main() {
         }
         Err(e) => {
             eprintln!("Request failed: {e}");
+            if let Some(hint) = e.hint() {
+                eprintln!("{hint}");
+            }
             std::process::exit(1);
         }
     }
