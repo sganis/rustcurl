@@ -3,5 +3,12 @@ name = "rustcurl"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = ["backend-curl"]
+backend-curl = ["dep:curl"]
+backend-reqwest = ["dep:reqwest", "dep:tokio"]
+
 [dependencies]
-curl = "0.4"
+curl = { version = "0.4", optional = true }
+reqwest = { version = "0.13", optional = true, path = "../reqwest", features = ["negotiate", "json", "blocking"] }
+tokio = { version = "1.0", optional = true, features = ["rt", "rt-multi-thread"] }

@@ -38,6 +38,7 @@ impl Response {
         String::from_utf8_lossy(&self.body).to_string()
     }
 
+    #[allow(dead_code)]
     pub fn header_map(&self) -> Vec<(String, String)> {
         self.headers
             .iter()
@@ -48,6 +49,7 @@ impl Response {
             .collect()
     }
 
+    #[allow(dead_code)]
     pub fn get_header(&self, name: &str) -> Option<String> {
         let name_lower = name.to_lowercase();
         self.header_map()

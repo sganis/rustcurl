@@ -1,14 +1,22 @@
 // src/curl/request.rs
 
+#[cfg(feature = "backend-curl")]
 use curl::easy::{Auth, Easy, List, SslOpt};
 use std::env;
+#[cfg(feature = "backend-curl")]
 use std::fs;
+#[cfg(feature = "backend-curl")]
 use std::time::Duration;
 
-use super::config::{Method, RequestConfig};
+#[cfg(feature = "backend-curl")]
+use super::config::Method;
+use super::config::RequestConfig;
+#[cfg(feature = "backend-curl")]
 use super::error::RequestError;
+#[cfg(feature = "backend-curl")]
 use super::response::{Response, Timing};
 
+#[cfg(feature = "backend-curl")]
 pub fn resolve_username(config: &RequestConfig) -> Option<String> {
     config
         .username
@@ -16,6 +24,7 @@ pub fn resolve_username(config: &RequestConfig) -> Option<String> {
         .or_else(|| env::var("RUSTCURL_USER").ok())
 }
 
+#[cfg(feature = "backend-curl")]
 pub fn resolve_password(config: &RequestConfig) -> Option<String> {
     config
         .password
@@ -43,6 +52,7 @@ pub fn resolve_noproxy(config: &RequestConfig) -> Option<String> {
         .or_else(|| env::var("no_proxy").ok())
 }
 
+#[cfg(feature = "backend-curl")]
 fn apply_method(easy: &mut Easy, config: &RequestConfig) -> Result<(), RequestError> {
     match &config.method {
         Method::Get => {}
@@ -65,6 +75,7 @@ fn apply_method(easy: &mut Easy, config: &RequestConfig) -> Result<(), RequestEr
     Ok(())
 }
 
+#[cfg(feature = "backend-curl")]
 fn apply_auth(easy: &mut Easy, config: &RequestConfig) -> Result<(), RequestError> {
     if config.negotiate {
         let mut auth = Auth::new();
@@ -87,6 +98,7 @@ fn apply_auth(easy: &mut Easy, config: &RequestConfig) -> Result<(), RequestErro
     Ok(())
 }
 
+#[cfg(feature = "backend-curl")]
 fn build_headers(config: &RequestConfig) -> Result<List, RequestError> {
     let mut list = List::new();
     for h in &config.headers {
@@ -98,6 +110,7 @@ fn build_headers(config: &RequestConfig) -> Result<List, RequestError> {
     Ok(list)
 }
 
+#[cfg(feature = "backend-curl")]
 fn apply_options(easy: &mut Easy, config: &RequestConfig) -> Result<(), RequestError> {
     if config.insecure {
         easy.ssl_verify_peer(false)?;
@@ -169,6 +182,7 @@ fn apply_options(easy: &mut Easy, config: &RequestConfig) -> Result<(), RequestE
     Ok(())
 }
 
+#[cfg(feature = "backend-curl")]
 fn apply_resolve(easy: &mut Easy, config: &RequestConfig) -> Result<(), RequestError> {
     if !config.resolve.is_empty() {
         let mut list = List::new();
@@ -180,6 +194,7 @@ fn apply_resolve(easy: &mut Easy, config: &RequestConfig) -> Result<(), RequestE
     Ok(())
 }
 
+#[cfg(feature = "backend-curl")]
 fn collect_timing(easy: &mut Easy) -> Timing {
     Timing {
         dns: easy.namelookup_time().unwrap_or(Duration::ZERO),
@@ -191,6 +206,7 @@ fn collect_timing(easy: &mut Easy) -> Timing {
     }
 }
 
+#[cfg(feature = "backend-curl")]
 pub fn perform_request(config: &RequestConfig) -> Result<Response, RequestError> {
     let mut easy = Easy::new();
     easy.url(&config.url)?;

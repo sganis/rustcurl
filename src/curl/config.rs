@@ -151,6 +151,7 @@ impl RequestConfig {
         self
     }
 
+    #[allow(dead_code)]
     pub fn header(mut self, h: &str) -> Self {
         self.headers.push(h.to_string());
         self
@@ -241,6 +242,7 @@ impl RequestConfig {
         self
     }
 
+    #[allow(dead_code)]
     pub fn add_resolve(mut self, entry: &str) -> Self {
         self.resolve.push(entry.to_string());
         self

@@ -1,6 +1,7 @@
 // src/main.rs
 
 mod curl;
+mod backend;
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -13,7 +14,9 @@ fn main() {
         }
     };
 
-    match curl::perform_request(&config) {
+    let backend = backend::get_backend();
+
+    match backend.perform_request(&config) {
         Ok(response) => {
             if config.silent {
                 if config.output.is_none() {
