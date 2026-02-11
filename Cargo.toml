@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [features]
-default = ["backend-curl"]
-backend-curl = ["dep:curl"]
-backend-reqwest = ["dep:reqwest", "dep:tokio"]
+default = ["curl"]
+curl = ["dep:curl"]
+reqwest = ["dep:reqwest", "dep:tokio"]
 
 [dependencies]
 curl = { version = "0.4", optional = true }

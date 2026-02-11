@@ -3,13 +3,13 @@
 //! HTTP backend abstraction for rustcurl.
 //!
 //! Supports multiple backends via feature flags:
-//! - backend-curl: Uses curl crate (libcurl) - default, mature SSPI support
-//! - backend-reqwest: Uses reqwest crate with custom negotiate implementation
+//! - curl: Uses curl crate (libcurl) - default, mature SSPI support
+//! - reqwest: Uses reqwest crate with custom negotiate implementation
 
-#[cfg(feature = "backend-curl")]
+#[cfg(feature = "curl")]
 pub mod curl_backend;
 
-#[cfg(feature = "backend-reqwest")]
+#[cfg(feature = "reqwest")]
 pub mod reqwest_backend;
 
 use crate::curl::{config::RequestConfig, error::RequestError, response::Response};
@@ -28,12 +28,12 @@ pub trait HttpBackend {
 
 /// Get the active backend based on compile-time features
 pub fn get_backend() -> Box<dyn HttpBackend> {
-    #[cfg(feature = "backend-curl")]
+    #[cfg(feature = "curl")]
     {
         Box::new(curl_backend::CurlBackend::new())
     }
 
-    #[cfg(all(feature = "backend-reqwest", not(feature = "backend-curl")))]
+    #[cfg(all(feature = "reqwest", not(feature = "curl")))]
     {
         Box::new(reqwest_backend::ReqwestBackend::new())
     }

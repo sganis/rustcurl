@@ -4,7 +4,7 @@ use std::fmt;
 
 #[derive(Debug)]
 pub enum RequestError {
-    #[cfg(feature = "backend-curl")]
+    #[cfg(feature = "curl")]
     Curl(curl::Error),
     Io(std::io::Error),
     #[allow(dead_code)]
@@ -16,7 +16,7 @@ pub enum RequestError {
 impl fmt::Display for RequestError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            #[cfg(feature = "backend-curl")]
+            #[cfg(feature = "curl")]
             RequestError::Curl(e) => write!(f, "curl error: {e}"),
             RequestError::Io(e) => write!(f, "io error: {e}"),
             RequestError::Config(msg) => write!(f, "config error: {msg}"),
@@ -28,7 +28,7 @@ impl fmt::Display for RequestError {
 impl std::error::Error for RequestError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            #[cfg(feature = "backend-curl")]
+            #[cfg(feature = "curl")]
             RequestError::Curl(e) => Some(e),
             RequestError::Io(e) => Some(e),
             RequestError::Config(_) | RequestError::Http(_) => None,
@@ -36,7 +36,7 @@ impl std::error::Error for RequestError {
     }
 }
 
-#[cfg(feature = "backend-curl")]
+#[cfg(feature = "curl")]
 impl From<curl::Error> for RequestError {
     fn from(e: curl::Error) -> Self {
         RequestError::Curl(e)
@@ -52,23 +52,23 @@ impl From<std::io::Error> for RequestError {
 impl RequestError {
     pub fn hint(&self) -> Option<&'static str> {
         match self {
-            #[cfg(feature = "backend-curl")]
+            #[cfg(feature = "curl")]
             RequestError::Curl(e) if e.is_couldnt_resolve_host() => Some(
                 "Hint: DNS resolution failed. If behind a corporate proxy, set HTTPS_PROXY or use -x <proxy-url>",
             ),
-            #[cfg(feature = "backend-curl")]
+            #[cfg(feature = "curl")]
             RequestError::Curl(e) if e.is_couldnt_resolve_proxy() => Some(
                 "Hint: Could not resolve proxy hostname. Check your proxy URL",
             ),
-            #[cfg(feature = "backend-curl")]
+            #[cfg(feature = "curl")]
             RequestError::Curl(e) if e.is_ssl_connect_error() || e.is_peer_failed_verification() => Some(
                 "Hint: SSL error. Try --insecure (-k), --cacert <path>, or --ssl-no-revoke for revocation issues",
             ),
-            #[cfg(feature = "backend-curl")]
+            #[cfg(feature = "curl")]
             RequestError::Curl(e) if format!("{e}").contains("revocation") => Some(
                 "Hint: Certificate revocation check failed. Try --ssl-no-revoke to disable revocation checks",
             ),
-            #[cfg(feature = "backend-curl")]
+            #[cfg(feature = "curl")]
             RequestError::Curl(e) if format!("{e}").contains("407") => Some(
                 "Hint: Proxy requires authentication (407). Try --proxy-negotiate for Kerberos/SPNEGO or --proxy-user <user:pass>",
             ),
