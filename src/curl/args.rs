@@ -38,6 +38,7 @@ pub fn print_usage() {
     eprintln!("  --connect-timeout <SECS> Connection timeout in seconds");
     eprintln!("  --max-time <SECS>        Maximum total time in seconds");
     eprintln!("  --max-redirs <N>         Maximum number of redirects");
+    eprintln!("  -L, --location           Follow redirects (always enabled)");
     eprintln!("  --ssl-no-revoke          Disable certificate revocation checks");
     eprintln!("  --compressed             Request compressed response");
     eprintln!("  --timing                 Show timing information");
@@ -191,6 +192,7 @@ pub fn parse_args(args: &[String]) -> Result<RequestConfig, String> {
             }
             "--proxy-negotiate" => proxy_negotiate = true,
             "--proxy-ntlm" => proxy_ntlm = true,
+            "-L" | "--location" => {} // follow redirects (always on)
             "--ssl-no-revoke" => ssl_no_revoke = true,
             "--proxy-insecure" => proxy_insecure = true,
             "--proxy-cacert" => {
@@ -657,6 +659,18 @@ mod tests {
     fn proxy_cacert_flag() {
         let cfg = parse_args(&args(&["--proxy-cacert", "/corp-ca.pem", "https://x.com"])).unwrap();
         assert_eq!(cfg.proxy_cacert.as_deref(), Some("/corp-ca.pem"));
+    }
+
+    #[test]
+    fn location_short_flag() {
+        let cfg = parse_args(&args(&["-L", "https://x.com"])).unwrap();
+        assert_eq!(cfg.url, "https://x.com");
+    }
+
+    #[test]
+    fn location_long_flag() {
+        let cfg = parse_args(&args(&["--location", "https://x.com"])).unwrap();
+        assert_eq!(cfg.url, "https://x.com");
     }
 
     #[test]

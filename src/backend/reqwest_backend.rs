@@ -124,10 +124,13 @@ fn build_client(config: &RequestConfig) -> Result<reqwest::blocking::Client, Req
         let mut proxy = reqwest::Proxy::all(proxy_url)?;
 
         // Proxy authentication
-        if config.proxy_negotiate || config.proxy_ntlm {
-            // Note: reqwest doesn't support proxy negotiate/NTLM directly
-            // This is a limitation compared to curl backend
-            // Fall back to basic auth if proxy credentials are provided
+        if config.proxy_negotiate {
+            proxy = proxy.negotiate_auth();
+        } else if config.proxy_ntlm {
+            eprintln!(
+                "Warning: --proxy-ntlm is not supported with the reqwest backend. \
+                 Use the curl backend for proxy NTLM authentication."
+            );
             if let Some(ref user) = config.proxy_user {
                 let pass = config.proxy_password.as_deref().unwrap_or("");
                 proxy = proxy.basic_auth(user, pass);
@@ -152,6 +155,11 @@ fn build_client(config: &RequestConfig) -> Result<reqwest::blocking::Client, Req
     if let Some(d) = config.max_time {
         builder = builder.timeout(d);
     }
+
+    // SSL revocation checks: rustls (used by reqwest) does not perform
+    // online CRL/OCSP revocation checks by default, so --ssl-no-revoke
+    // is effectively a no-op here. The curl backend uses schannel on
+    // Windows which does check revocation, hence needing the flag there.
 
     // Redirects
     if let Some(max) = config.max_redirs {

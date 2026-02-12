@@ -129,7 +129,11 @@ fn apply_options(easy: &mut Easy, config: &RequestConfig) -> Result<(), RequestE
         let mut auth = Auth::new();
         auth.gssnegotiate(true);
         easy.proxy_auth(&auth)?;
-        easy.proxy_username(&config.proxy_user.as_deref().unwrap_or(":"))?;
+        // Empty string triggers SSPI default credentials (SSO) via p_identity=NULL
+        // in libcurl's spnego_sspi.c. The ":" syntax is only valid for the
+        // combined CURLOPT_PROXYUSERPWD, not CURLOPT_PROXYUSERNAME.
+        easy.proxy_username(config.proxy_user.as_deref().unwrap_or(""))?;
+        easy.proxy_password(config.proxy_password.as_deref().unwrap_or(""))?;
     } else if config.proxy_ntlm {
         let mut auth = Auth::new();
         auth.ntlm(true);
