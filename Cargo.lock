@@ -841,6 +841,7 @@ dependencies = [
 [[package]]
 name = "reqwest"
 version = "0.13.2"
+source = "git+https://github.com/sganis/reqwest#04b740399eb285a7c837e8703519401701ea835d"
 dependencies = [
  "base64",
  "bytes",

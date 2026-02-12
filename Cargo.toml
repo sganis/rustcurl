@@ -10,5 +10,5 @@ reqwest = ["dep:reqwest", "dep:tokio"]
 
 [dependencies]
 curl = { version = "0.4", optional = true }
-reqwest = { version = "0.13", optional = true, path = "../reqwest", features = ["negotiate", "json", "blocking"] }
+reqwest = { git = "https://github.com/sganis/reqwest", optional = true, features = ["negotiate", "json", "blocking"] }
 tokio = { version = "1.0", optional = true, features = ["rt", "rt-multi-thread"] }
